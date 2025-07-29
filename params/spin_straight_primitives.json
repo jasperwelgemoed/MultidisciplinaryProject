@@ -1,0 +1,10 @@
+{
+  "primitives": [
+    // in-place CCW and CW 90°
+    { "id": 0, "x": 0.0,  "y": 0.0,  "theta":  0.3927, "pts": [] },
+    { "id": 1, "x": 0.0,  "y": 0.0,  "theta": -0.3927, "pts": [] },
+    // drive straight ±0.5 m
+    { "id": 2, "x": 0.2,  "y": 0.0,  "theta":  0.0,    "pts": [] },
+    { "id": 3, "x": -0.2, "y": 0.0,  "theta":  0.0,    "pts": [] }
+  ]
+}

@@ -1,0 +1,43 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>group03</name>
+  <version>0.1.0</version>
+  <description>The group03 package contains ROS 2 nodes, drivers and launch files to autonomously detect, plan and pick apples in an orchard environment. </description>
+  <maintainer email="j.t.verhoog@tudelft.nl">jverhoog</maintainer>
+  <license>Apache-2.0</license>
+
+  <!-- For apple_detection-->
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>cv2</exec_depend>
+  <exec_depend>cv_bridge</exec_depend>
+  <exec_depend>ultralytics</exec_depend>
+  <exec_depend>numpy</exec_depend>
+  
+  <test_depend>ament_copyright</test_depend>
+  <test_depend>ament_flake8</test_depend>
+  <test_depend>ament_pep257</test_depend>
+  <test_depend>python3-pytest</test_depend>
+
+  <!-- bring in SLAM toolbox and the Nav2 map server -->
+  <depend>slam_toolbox</depend>
+  <depend>nav2_map_server</depend>
+
+  <!-- for launch files -->
+  <depend>launch</depend>
+  <depend>launch_ros</depend>
+  <depend>ament_index_python</depend>
+
+  <!-- for the gazebo sim -->
+  <depend>mirte_gazebo</depend>
+  <depend>gazebo_ros</depend>
+  <depend>controller_manager</depend>
+  <depend>twist_mux</depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>

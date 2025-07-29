@@ -1,0 +1,84 @@
+stages:
+  - build
+
+variables:
+  ROS_DISTRO: humble
+  IGNORE_PACKAGES: "" # packages to ignore for building and test/lint, separated by spaces
+  IGNORE_TEST_PACKAGES: "" # packages to ignore for test/lint only, separated by spaces
+build:
+  stage: build
+  image: ros:$ROS_DISTRO-perception # use the perception image, as it has most of the packages we need
+  allow_failure:
+    exit_codes: 123 # Allow packages missing test code, but let it show as warning
+
+
+  script:
+    # add apt mirror:
+    - echo "deb [trusted=yes] http://ftp.tudelft.nl/ros2/ubuntu $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/ros-latest.list
+    # add key
+    - sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-key F42ED6FBAB17C654
+    - source /opt/ros/$ROS_DISTRO/setup.bash
+    - rosdep init || true
+    - sudo apt update
+    - rosdep update
+    - error=0
+    # if dependencies.repos exists, import them and add them to the ignore list
+    - |
+      if [ -f dependencies.repos ]; then
+        mkdir -p ci_src
+        vcs import ci_src < dependencies.repos --recursive
+        IGNORE_TEST_PACKAGES="$IGNORE_TEST_PACKAGES $(colcon list -n --base-paths ./ci_src)"
+        echo $IGNORE_TEST_PACKAGES
+        # exit 1
+      fi
+    # fix paths for rosdep, as it needs a path instead of a package name
+    - ROSDEP_IGNORE=$(colcon list --paths-only --packages-select $IGNORE_PACKAGES)
+    - rosdep install --from-paths ./ --ignore-src -r -y -t build -t buildtool -t test -i $ROSDEP_IGNORE
+    - colcon build --continue-on-error --packages-skip $IGNORE_PACKAGES || error=1
+    - source install/setup.bash || true
+
+
+    # How to add linting to your package:
+    # cmakelists.txt: add just before ament_package()
+      # if(BUILD_TESTING)
+      #   find_package(ament_lint_auto REQUIRED)
+      #   ament_lint_auto_find_test_dependencies()
+      # endif()
+    # package.xml: add (required):
+      # <test_depend>ament_lint_auto</test_depend>
+      # <buildtool_depend>ament_cmake</buildtool_depend>
+    # depending on the package and tests you want to run ( https://github.com/ament/ament_lint/tree/humble ):
+      # <test_depend>ament_cmake_clang_format</test_depend>
+      # <test_depend>ament_cmake_cppcheck</test_depend>
+      # <test_depend>ament_cmake_pycodestyle</test_depend>
+
+
+    # for each package in colcon list with a cmakelists.txt, check that it contains ament_lint_auto_find_test_dependencies
+    # as this line is 'needed' for colcon test to work. The warning is to let users know that they could add it.
+    # python packages are a bit different with a test folder, so we skip them
+    - | 
+        warning_no_tests=0
+        for package in $(colcon list --paths-only --packages-skip $IGNORE_PACKAGES $IGNORE_TEST_PACKAGES ); do
+          if [ -f "$package/CMakeLists.txt" ]; then
+            if ! grep -q "ament_lint_auto_find_test_dependencies" "$package/CMakeLists.txt"; then
+              echo "Package $package does not contain ament_lint_auto_find_test_dependencies";
+              warning_no_tests=1;
+            fi
+          fi
+        done
+    - colcon test --packages-skip $IGNORE_PACKAGES $IGNORE_TEST_PACKAGES || error=1
+    - colcon test-result --verbose || error=1
+    # copy test results from  colcon test-result files to artifacts folder
+    - mkdir -p artifacts
+    - for file in $(colcon test-result --result-files-only); do
+        echo "Copying $file to artifacts folder";
+        cp $file artifacts/;
+      done
+    - if [ $error -eq 1 ]; then exit 1; fi
+    - if [ $warning_no_tests -eq 1 ]; then exit 123; fi
+  artifacts:
+    when: always
+    paths:
+      - artifacts/
+    reports:
+      junit: "artifacts/*.xml"

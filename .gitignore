@@ -1,0 +1,47 @@
+# === ROS 2 build and install outputs ===
+build/
+install/
+log/
+
+# === Python cache ===
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.p~ 
+*.so
+
+# === CMake temporary files ===
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+
+# === Test cache ===
+*.pytest_cache/
+.test_result/
+nosetests.xml
+coverage.xml
+*.cover
+htmlcov/
+
+# === VSCode and other IDEs ===
+.vscode/
+.idea/
+
+# === OS / Editor-specific ===
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+# === Python virtual environments ===
+venv/
+.env/
+.envrc
+
+# === ROS 2 workspace metadata ===
+.colcon/
+
+# YOLO models
+*.pt
